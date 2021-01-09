@@ -1,52 +1,27 @@
 import IPFS from 'ipfs-mini'
 import { RBTree } from 'bintrees'
+import { IPFSNode, IPFSRoot, RBTreeNodeData, RBTreeNode } from './interfaces';
 
-// Node interface for the local tree
-interface LocalNode {
-  key: number;
-  value: Object;
-}
-
-// Node interface for the red black tree
-interface RBTreeNode {
-  left: RBTreeNode;
-  right: RBTreeNode;
-  data: LocalNode;
-}
-
-// Interface for each node IPFS file
-interface IPFSNode {
-  key: number;
-  value: Object;
-  leftChild: string | null;
-  rightChild: string | null;
-}
-
-// Interface for the root IPFS file
-interface IPFSRoot {
-  metadata: Object;
-  root: string;
-}
-
-export class IPFSSearchTree {
+// Used for creating & uploading a tree
+export class LocalIPFSSearchTree {
   ipfs: any;
   tree: any;
 
   constructor(ipfsEndpoint: string) {
     this.ipfs = new IPFS({ host: ipfsEndpoint, port: 5001, protocol: 'https' });
-    this.tree = new RBTree((a: LocalNode, b: LocalNode) => {
+    this.tree = new RBTree((a: RBTreeNodeData, b: RBTreeNodeData) => {
       return a.key - b.key;
     });
   }
 
-  insert(key: number, value: Object) {
+  insert(key: number, value: any) {
     this.tree.insert({
       key,
       value
     });
   }
 
-  async uploadTreeToIPFS(metadata: Object): Promise<string> {
+  async uploadTreeToIPFS(metadata: any): Promise<string> {
     const ipfsRoot: IPFSRoot = {
       metadata,
       root: await this.uploadSubtreeToIPFS(this.tree._root)
@@ -54,7 +29,7 @@ export class IPFSSearchTree {
     return this.uploadObjectToIPFS(ipfsRoot);
   }
 
-  private uploadObjectToIPFS(value: Object): Promise<string> {
+  private uploadObjectToIPFS(value: any): Promise<string> {
     return new Promise((resolve, reject) => {
       this.ipfs.addJSON(value, (err, result) => {
         if (err != null) {
@@ -63,7 +38,7 @@ export class IPFSSearchTree {
           resolve(result);
         }
       });
-    })
+    });
   }
 
   private async uploadSubtreeToIPFS(subtree: RBTreeNode | null): Promise<string> {
