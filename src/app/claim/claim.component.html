@@ -1,0 +1,8 @@
+<h1>Claim Airdrop</h1>
+
+<label for="claimAddressInput">Claimant address</label>
+<input id="claimAddressInput" type="text" (input)="claimAddress = $event.target.value">
+<button (click)="clickCheck()">Check</button>
+<button (click)="clickClaim()">Claim</button>
+
+<p *ngIf="userClaim">Claim: {{userClaim}}</p>

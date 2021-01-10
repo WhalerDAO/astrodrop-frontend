@@ -1,6 +1,7 @@
 import IPFS from 'ipfs-mini'
 import { RBTree } from 'bintrees'
 import { IPFSNode, IPFSRoot, RBTreeNodeData, RBTreeNode } from './interfaces';
+import BigNumber from 'bignumber.js';
 
 // Used for creating & uploading a tree
 export class LocalIPFSSearchTree {
@@ -10,11 +11,19 @@ export class LocalIPFSSearchTree {
   constructor(ipfsEndpoint: string) {
     this.ipfs = new IPFS({ host: ipfsEndpoint, port: 5001, protocol: 'https' });
     this.tree = new RBTree((a: RBTreeNodeData, b: RBTreeNodeData) => {
-      return a.key - b.key;
+      const keyA = new BigNumber(a.key.toLowerCase(), 16);
+      const keyB = new BigNumber(b.key.toLowerCase(), 16);
+      if (keyA.eq(keyB)) {
+        return 0;
+      } else if (keyA.lt(keyB)) {
+        return -1;
+      } else {
+        return 1;
+      }
     });
   }
 
-  insert(key: number, value: any) {
+  insert(key: string, value: any) {
     this.tree.insert({
       key,
       value

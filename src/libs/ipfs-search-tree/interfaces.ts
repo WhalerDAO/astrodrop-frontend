@@ -1,6 +1,6 @@
 // The data in an RBTreeNode
 export interface RBTreeNodeData {
-  key: number;
+  key: string; // hexadecimal string
   value: any;
 }
 
@@ -13,7 +13,7 @@ export interface RBTreeNode {
 
 // Interface for each node IPFS file
 export interface IPFSNode {
-  key: number;
+  key: string; // hexadecimal string
   value: any;
   leftChild: string | null;
   rightChild: string | null;

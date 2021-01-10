@@ -18,7 +18,7 @@ export class RemoteIPFSSearchTree {
     this.rootNode = await this.getObjectFromIPFS(this.rootFile.root);
   }
 
-  async find(key: number): Promise<any> {
+  async find(key: string): Promise<any> {
     return this.findFromSubtree(key, this.rootNode);
   }
 
@@ -26,7 +26,7 @@ export class RemoteIPFSSearchTree {
     return this.rootFile.metadata;
   }
 
-  private async findFromSubtree(key: number, subtree: IPFSNode): Promise<any> {
+  private async findFromSubtree(key: string, subtree: IPFSNode): Promise<any> {
     let nextSubtreeToSearch;
     if (key === subtree.key) {
       // found at root

@@ -1,0 +1,6 @@
+<h1>Create Merkle Airdrop</h1>
+
+<textarea [(ngModel)]="balancesInput"></textarea>
+<button (click)="clickUpload()">Upload</button>
+
+<a routerLink="/claim/{{rootIPFSHash}}" *ngIf="rootIPFSHash">Claim page</a>
