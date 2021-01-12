@@ -65,7 +65,7 @@ export class LocalIPFSSearchTree {
     await Promise.all([
       this.uploadSubtreeToIPFS(subtree.left).then(ipfsHash => ipfsNode.leftChild = ipfsHash),
       this.uploadSubtreeToIPFS(subtree.right).then(ipfsHash => ipfsNode.rightChild = ipfsHash)
-    ])
+    ]);
     return this.uploadObjectToIPFS(ipfsNode);
   }
 }
