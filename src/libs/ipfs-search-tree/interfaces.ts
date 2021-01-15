@@ -24,3 +24,8 @@ export interface IPFSRoot {
   metadata: any;
   root: string;
 }
+
+export interface SubtreeIPFSFiles {
+  ipfsHash: string;
+  files: IPFSNode[];
+}
