@@ -15,16 +15,15 @@
   Format:
   <pre>
 {{ '{' }}
-  "address1": "amount1",
-  "address2": "amount2",
+  "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045": "420.69",
+  "0x46e01e73074937FEFb4104B5597Df32370172f86": "1234.5678",
   ...
 {{ '}' }}
   </pre>
 
   <p>
-    The airdrop amounts need to be scaled by 10<sup>tokenDecimals</sup> so that they are integers. For example, if your
-    token uses 18 decimals you need to
-    multiply the airdrop amounts by 10<sup>18</sup>. The amounts also need to be in decimal.
+    The airdrop amounts should be in decimal, and the number of decimals should not exceed the maximum supported by the
+    airdropped token.
   </p>
 
   <textarea style="height: 10em;" [(ngModel)]="balancesInput"></textarea>

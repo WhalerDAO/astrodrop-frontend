@@ -68,7 +68,7 @@ export class CreateComponent implements OnInit {
     try {
       this.parseBalances(this.balancesInput);
       this.numRecipients = Object.keys(this.merkleTree.claims).length;
-      this.totalAirdropAmount = new BigNumber(this.merkleTree.tokenTotal, 16).div(Math.pow(10, this.tokenDecimals)).toFixed(this.tokenDecimals);
+      this.totalAirdropAmount = new BigNumber(this.merkleTree.tokenTotal, 16).div(new BigNumber(10).pow(this.tokenDecimals)).toFixed(this.tokenDecimals);
       this.canContinue = true;
     } catch (error) {
       this.wallet.displayGenericError(error);
@@ -98,7 +98,7 @@ export class CreateComponent implements OnInit {
 
     // convert balances to hexadecimal
     for (let claimant of Object.keys(balances)) {
-      balances[claimant] = new BigNumber(balances[claimant]).toString(16);
+      balances[claimant] = new BigNumber(balances[claimant]).times(new BigNumber(10).pow(this.tokenDecimals)).integerValue().toString(16);
     }
 
     // create merkle tree

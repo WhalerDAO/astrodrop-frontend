@@ -82,7 +82,7 @@ export class ClaimComponent implements OnInit {
 
     if (!this.claimed) {
       const tokenDecimals = +await tokenContract.methods.decimals().call();
-      const tokenPrecision = Math.pow(10, tokenDecimals);
+      const tokenPrecision = new BigNumber(10).pow(tokenDecimals);
       this.airdropBalance = new BigNumber(this.userClaim.amount, 16).div(tokenPrecision);
       this.claimableAmount = this.airdropBalance.toFixed(tokenDecimals);
     }
