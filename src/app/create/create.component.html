@@ -1,7 +1,16 @@
 <h1>Create Airdrop</h1>
 
 <ng-container *ngIf="step == 1">
-  <h2>Step 1: Enter recipient addresses and airdrop amounts</h2>
+  <h2>Step 1: Specify the token to be airdropped</h2>
+
+  <label for="tokenAddress">Address of the airdropped token</label>
+  <input type="text" id="tokenAddress" [(ngModel)]="tokenAddressInput">
+
+  <button (click)="clickConfirmToken()">Confirm</button>
+</ng-container>
+
+<ng-container *ngIf="step == 2">
+  <h2>Step 2: Enter recipient addresses and airdrop amounts</h2>
 
   Format:
   <pre>
@@ -21,34 +30,40 @@
   <textarea style="height: 10em;" [(ngModel)]="balancesInput"></textarea>
 
   <button (click)="clickParseBalances()">Parse data</button>
+
+  <pre *ngIf="canContinue">
+Success!
+Total airdrop amount: {{totalAirdropAmount}} {{tokenSymbol}}
+Number of recipients: {{numRecipients}}
+  </pre>
 </ng-container>
 
-<ng-container *ngIf="step == 2">
-  <h2>Step 2: Deploy airdrop smart contract</h2>
-
-  <label for="tokenAddress">Address of the airdropped token</label>
-  <input type="text" id="tokenAddress" [(ngModel)]="tokenAddressInput">
+<ng-container *ngIf="step == 3">
+  <h2>Step 3: Deploy airdrop smart contract</h2>
 
   <div>
     <button (click)="clickDeploy()">Deploy</button>
   </div>
 </ng-container>
 
-<ng-container *ngIf="step == 3">
-  <h2>Step 3: Publish your airdrop</h2>
+<ng-container *ngIf="step == 4">
+  <h2>Step 4: Publish your airdrop</h2>
 
   <p>
     Your Astrodrop contract is being deployed at <a target="_blank"
-      href="https://rinkeby.etherscan.io/address/{{astrodropContractAddress}}">{{astrodropContractAddress}}</a>!
-    The total airdrop amount is {{totalAirdropAmount}} {{tokenSymbol}}, which should be sent to
+      href="https://rinkeby.etherscan.io/address/{{astrodropContractAddress}}">{{astrodropContractAddress}}</a>.
+  </p>
+
+  <p>
+    Important note: You need to send the tokens to be airdropped ({{totalAirdropAmount}} {{tokenSymbol}}) to
     the Astrodrop contract.
   </p>
 
-  <button (click)="clickUpload()">Upload airdrop data to IPFS</button>
+  <button (click)="clickUpload()">Publish your Astrodrop claim page</button>
 
-  <a routerLink="/claim/{{rootIPFSHash}}" *ngIf="rootIPFSHash">Claim page</a>
+  <a style="margin-left: 3em;" routerLink="/claim/{{rootIPFSHash}}" *ngIf="rootIPFSHash">Your claim page</a>
 </ng-container>
 
 <div style="margin-top: 3em;" *ngIf="canContinue">
-  <button style="float: right;" (click)="clickNext()" *ngIf="3 > step">▶</button>
+  <button style="float: right;" (click)="clickNext()">▶</button>
 </div>

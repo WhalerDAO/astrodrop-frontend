@@ -23,8 +23,10 @@ export class CreateComponent implements OnInit {
   rootIPFSHash: string;
   merkleTree: any;
   astrodropContractAddress: string;
+  tokenDecimals: number;
   totalAirdropAmount: string;
   tokenSymbol: string;
+  numRecipients: number;
   canContinue: boolean;
 
   constructor(
@@ -39,6 +41,7 @@ export class CreateComponent implements OnInit {
     this.tokenAddressInput = '';
     this.step = 1;
     this.canContinue = false;
+    this.numRecipients = 0;
   }
 
   clickNext() {
@@ -46,9 +49,26 @@ export class CreateComponent implements OnInit {
     this.canContinue = false;
   }
 
+  async clickConfirmToken() {
+    // check inputs
+    if (!this.wallet.web3.utils.isAddress(this.tokenAddressInput)) {
+      this.wallet.displayGenericError(new Error('Input not an Ethereum address'));
+      return;
+    }
+
+    const tokenContract = this.contracts.getERC20(this.tokenAddressInput, this.wallet.readonlyWeb3());
+    await Promise.all([
+      tokenContract.methods.decimals().call().then(decimals => this.tokenDecimals = +decimals),
+      tokenContract.methods.symbol().call().then(symbol => this.tokenSymbol = symbol)
+    ]);
+    this.step += 1;
+  }
+
   clickParseBalances() {
     try {
       this.parseBalances(this.balancesInput);
+      this.numRecipients = Object.keys(this.merkleTree.claims).length;
+      this.totalAirdropAmount = new BigNumber(this.merkleTree.tokenTotal, 16).div(Math.pow(10, this.tokenDecimals)).toFixed(this.tokenDecimals);
       this.canContinue = true;
     } catch (error) {
       this.wallet.displayGenericError(error);
@@ -56,19 +76,10 @@ export class CreateComponent implements OnInit {
   }
 
   async clickDeploy() {
-    // check inputs
-    if (!this.wallet.web3.utils.isAddress(this.tokenAddressInput)) {
-      this.wallet.displayGenericError(new Error('Input not an Ethereum address'));
-    }
-
     const unixTimestamp = Date.now();
     const salt = '0x' + new BigNumber(this.merkleTree.merkleRoot, 16).plus(unixTimestamp).toString(16);
     this.astrodropContractAddress = await this.computeAstrodropAddress(salt);
     this.deployAstrodropContract(this.tokenAddressInput, this.merkleTree.merkleRoot, salt);
-
-    const tokenContract = this.contracts.getERC20(this.tokenAddressInput, this.wallet.readonlyWeb3());
-    tokenContract.methods.decimals().call().then(decimals => this.totalAirdropAmount = new BigNumber(this.merkleTree.tokenTotal, 16).div(Math.pow(10, +decimals)).toFixed(+decimals));
-    tokenContract.methods.symbol().call().then(symbol => this.tokenSymbol = symbol);
   }
 
   clickUpload() {
