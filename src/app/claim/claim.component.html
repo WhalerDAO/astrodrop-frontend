@@ -1,8 +1,19 @@
 <h1>Claim Airdrop</h1>
 
-<label for="claimAddressInput">Claimant address</label>
-<input id="claimAddressInput" type="text" (input)="claimAddress = $event.target.value">
-<button (click)="clickCheck()">Check</button>
-<button (click)="clickClaim()">Claim</button>
-
-<p *ngIf="userClaim">Claim: {{userClaim}}</p>
+<ng-container *ngIf="!finishedLoadingRoot">
+  Loading...
+</ng-container>
+<ng-container *ngIf="finishedLoadingRoot">
+  <label for="claimAddressInput">Claimant address</label>
+  <input id="claimAddressInput" type="text" (input)="claimAddress = $event.target.value">
+  <button (click)="clickCheck()">Check</button>
+  
+  <ng-container *ngIf="finishedCheckingClaim && !claimed">
+    <p>Claimable amount: {{claimableAmount}} {{claimTokenSymbol}}</p>
+    <button (click)="clickClaim()">Claim</button>
+  </ng-container>
+  
+  <p *ngIf="finishedCheckingClaim && claimed">
+    This address has already claimed from this airdrop.
+  </p>
+</ng-container>

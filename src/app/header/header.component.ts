@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { WalletService } from '../wallet.service';
 
 @Component({
   selector: 'app-header',
@@ -7,9 +8,12 @@ import { Component, OnInit } from '@angular/core';
 })
 export class HeaderComponent implements OnInit {
 
-  constructor() { }
+  constructor(public wallet: WalletService) { }
 
   ngOnInit(): void {
   }
 
+  connectWallet() {
+    this.wallet.connect(() => { }, () => { }, false);
+  }
 }

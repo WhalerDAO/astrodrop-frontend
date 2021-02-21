@@ -24,7 +24,7 @@
               "src/assets"
             ],
             "styles": [
-              "src/assets/css/water.min.css",
+              "src/assets/css/sakura-vader.css",
               "src/styles.css"
             ],
             "scripts": [],

@@ -1,6 +1,54 @@
-<h1>Create Drop</h1>
+<h1>Create Airdrop</h1>
 
-<textarea [(ngModel)]="balancesInput"></textarea>
-<button (click)="clickUpload()">Upload</button>
+<ng-container *ngIf="step == 1">
+  <h2>Step 1: Enter recipient addresses and airdrop amounts</h2>
 
-<a routerLink="/claim/{{rootIPFSHash}}" *ngIf="rootIPFSHash">Claim page</a>
+  Format:
+  <pre>
+{{ '{' }}
+  "address1": "amount1",
+  "address2": "amount2",
+  ...
+{{ '}' }}
+  </pre>
+
+  <p>
+    The airdrop amounts need to be scaled by 10<sup>tokenDecimals</sup> so that they are integers. For example, if your
+    token uses 18 decimals you need to
+    multiply the airdrop amounts by 10<sup>18</sup>. The amounts also need to be in decimal.
+  </p>
+
+  <textarea style="height: 10em;" [(ngModel)]="balancesInput"></textarea>
+
+  <button (click)="clickParseBalances()">Parse data</button>
+</ng-container>
+
+<ng-container *ngIf="step == 2">
+  <h2>Step 2: Deploy airdrop smart contract</h2>
+
+  <label for="tokenAddress">Address of the airdropped token</label>
+  <input type="text" id="tokenAddress" [(ngModel)]="tokenAddressInput">
+
+  <div>
+    <button (click)="clickDeploy()">Deploy</button>
+  </div>
+</ng-container>
+
+<ng-container *ngIf="step == 3">
+  <h2>Step 3: Publish your airdrop</h2>
+
+  <p>
+    Your Astrodrop contract is being deployed at <a target="_blank"
+      href="https://rinkeby.etherscan.io/address/{{astrodropContractAddress}}">{{astrodropContractAddress}}</a>!
+    The total airdrop amount is {{totalAirdropAmount}} {{tokenSymbol}}, which should be sent to
+    the Astrodrop contract.
+  </p>
+
+  <button (click)="clickUpload()">Upload airdrop data to IPFS</button>
+
+  <a routerLink="/claim/{{rootIPFSHash}}" *ngIf="rootIPFSHash">Claim page</a>
+</ng-container>
+
+<div style="margin-top: 3em;" *ngIf="canContinue">
+  <button style="float: right;" (click)="clickNext()" *ngIf="3 > step">▶</button>
+</div>

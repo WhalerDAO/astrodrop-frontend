@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { WalletService } from './wallet.service';
 
 @Component({
   selector: 'app-root',
@@ -7,4 +8,8 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'merkle-drop';
+
+  constructor(public wallet: WalletService) {
+    wallet.connect(() => {}, () => {}, true);
+  }
 }

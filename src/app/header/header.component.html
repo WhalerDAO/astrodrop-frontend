@@ -1,1 +1,16 @@
-<h1>🌠Astrodrop</h1>
+<div style="display: flex; justify-content: space-between;">
+  <a routerLink="">
+    <h1 style="font-family: -webkit-pictograph; font-style: italic;">🌠Astrodrop</h1>
+  </a>
+
+  <div>
+    <button style="margin-top: 38%;" (click)="connectWallet()">
+      <div *ngIf="wallet.connected">
+        {{wallet.userAddress.substring(0, 14)}}
+      </div>
+      <div *ngIf="!wallet.connected">
+        Connect Wallet
+      </div>
+    </button>
+  </div>
+</div>

@@ -3,10 +3,12 @@ import { RBTree } from 'bintrees'
 import { IPFSNode, IPFSRoot, RBTreeNodeData, RBTreeNode, SubtreeIPFSFiles } from './interfaces';
 import BigNumber from 'bignumber.js';
 import Hash from 'ipfs-only-hash';
+import fetch from 'node-fetch';
 
 // Used for creating & uploading a tree
 export class LocalIPFSSearchTree {
-  UPLOAD_INTERVAL = 200; // in ms
+  UPLOAD_INTERVAL = 10; // in ms
+  PINATA_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIxOGE1NGQ3ZS1iMDA4LTQ4YjctYmU0OS1jMmNiYjI3NTNkYmYiLCJlbWFpbCI6InplZnJhbWxvdUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJpZCI6Ik5ZQzEiLCJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MX1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlfSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiY2M1MDUyM2IyYmI4Yjk4YWY0NTQiLCJzY29wZWRLZXlTZWNyZXQiOiJhMGEzYTVhNDkxZTEwZTEyNDlkZTFkZmIyM2Y2MjMwZjcyMTkxNmU5NzM1YmNlNzhhODFkMDhjNDNkMGYyMjkwIiwiaWF0IjoxNjEwNDk2OTEyfQ.yWo8Y68YBZW5TjKuqZNGbK3bPVqPovsvHwKymLuZjjQ';
   ipfs: any;
   tree: any;
 
@@ -44,11 +46,12 @@ export class LocalIPFSSearchTree {
       return new Promise(resolve => setTimeout(resolve, ms));
     }
     for (const ipfsNode of ipfsFiles.files) {
-      await this.uploadObjectToIPFS(ipfsNode);
+      await this.uploadObjectToPinata(ipfsNode);
       await sleep(this.UPLOAD_INTERVAL);
     }
 
-    return this.uploadObjectToIPFS(ipfsRoot);
+    const ipfsHash = await this.uploadObjectToPinata(ipfsRoot);
+    return ipfsHash;
   }
 
   private uploadObjectToIPFS(value: any): Promise<string> {
@@ -61,6 +64,12 @@ export class LocalIPFSSearchTree {
         }
       });
     });
+  }
+
+  private async uploadObjectToPinata(value: any): Promise<string> {
+    return fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', { method: 'POST', body: JSON.stringify(value), headers: { Authorization: `Bearer ${this.PINATA_JWT}`, 'Content-Type': 'application/json' }})
+      .then(response => response.json())
+      .then(parsedResponse => parsedResponse.IpfsHash);
   }
 
   private async getSubtreeIPFSFiles(subtree: RBTreeNode | null): Promise<SubtreeIPFSFiles> {
