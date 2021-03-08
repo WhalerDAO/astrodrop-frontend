@@ -1,57 +1,84 @@
-import IPFS from 'ipfs-mini'
-import { RBTree } from 'bintrees'
-import { IPFSNode, IPFSRoot, RBTreeNodeData, RBTreeNode, SubtreeIPFSFiles } from './interfaces';
-import BigNumber from 'bignumber.js';
+import IPFS from '../ipfs-mini';
+import { IPFSRoot } from './interfaces';
 import Hash from 'ipfs-only-hash';
-import fetch from 'node-fetch';
+import BigNumber from 'bignumber.js';
 
 // Used for creating & uploading a tree
 export class LocalIPFSSearchTree {
-  UPLOAD_INTERVAL = 10; // in ms
-  PINATA_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIxOGE1NGQ3ZS1iMDA4LTQ4YjctYmU0OS1jMmNiYjI3NTNkYmYiLCJlbWFpbCI6InplZnJhbWxvdUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJpZCI6Ik5ZQzEiLCJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MX1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlfSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiY2M1MDUyM2IyYmI4Yjk4YWY0NTQiLCJzY29wZWRLZXlTZWNyZXQiOiJhMGEzYTVhNDkxZTEwZTEyNDlkZTFkZmIyM2Y2MjMwZjcyMTkxNmU5NzM1YmNlNzhhODFkMDhjNDNkMGYyMjkwIiwiaWF0IjoxNjEwNDk2OTEyfQ.yWo8Y68YBZW5TjKuqZNGbK3bPVqPovsvHwKymLuZjjQ';
   ipfs: any;
-  tree: any;
+  keyValueMap: any; // maps string to object
+  metadata: any;
+  slices: number;
 
-  constructor(ipfsEndpoint: string) {
-    this.ipfs = new IPFS({ host: ipfsEndpoint, port: 5001, protocol: 'https' });
-    this.tree = new RBTree((a: RBTreeNodeData, b: RBTreeNodeData) => {
-      const keyA = new BigNumber(a.key.toLowerCase(), 16);
-      const keyB = new BigNumber(b.key.toLowerCase(), 16);
-      if (keyA.eq(keyB)) {
+  constructor(ipfsEndpoint: string, data: any, metadata: any, slices: number) {
+    this.ipfs = new IPFS({ host: ipfsEndpoint, port: 5001, protocol: 'https', base: '/ipfs/api/v0' });
+    this.keyValueMap = data;
+    this.metadata = metadata;
+    this.slices = slices;
+  }
+
+  async uploadData(): Promise<string> {
+    // sort data keys
+    const sortedKeys = Object.keys(this.keyValueMap).sort((a, b) => {
+      const aNum = new BigNumber(a.substr(2).toLowerCase(), 16);
+      const bNum = new BigNumber(b.substr(2).toLowerCase(), 16);
+      if (aNum.eq(bNum)) {
         return 0;
-      } else if (keyA.lt(keyB)) {
-        return -1;
-      } else {
-        return 1;
       }
+      return aNum.lt(bNum) ? -1 : 1;
     });
-  }
+    const N = sortedKeys.length;
 
-  insert(key: string, value: any) {
-    this.tree.insert({
-      key,
-      value
-    });
-  }
+    // divide data using pivots
+    const pivots = [];
+    const dataBins = [];
+    const sliceLength = Math.floor(N / this.slices);
+    for (let i = 1; i <= this.slices; i++) {
+      const pivotIdx = i * sliceLength - 1;
+      const pivot = sortedKeys[pivotIdx];
+      pivots.push(pivot);
 
-  async uploadTreeToIPFS(metadata: any): Promise<string> {
-    const ipfsFiles: SubtreeIPFSFiles = await this.getSubtreeIPFSFiles(this.tree._root); 
-    const ipfsRoot: IPFSRoot = {
-      metadata,
-      root: ipfsFiles.ipfsHash
+      const bin = {}
+      const binStartIdx = (i - 1) * sliceLength;
+      for (let j = binStartIdx; j <= pivotIdx; j++) {
+        const key = sortedKeys[j];
+        const value = this.keyValueMap[key];
+        bin[key] = value;
+      }
+      dataBins.push(bin);
+    }
+    const leftoverLength = N - this.slices * sliceLength;
+    if (leftoverLength > 0) {
+      // put leftover entries in an additional bin
+      // using the last key as pivot
+      pivots.push(sortedKeys[N - 1]);
+
+      const bin = {}
+      const binStartIdx = this.slices * sliceLength;
+      for (let j = binStartIdx; j <= N - 1; j++) {
+        const key = sortedKeys[j];
+        const value = this.keyValueMap[key];
+        bin[key] = value;
+      }
+      dataBins.push(bin);
+    }
+
+    // upload binned data
+    const binIPFSHashes = await Promise.all(dataBins.map(async (value) => {
+      const hash = await this.uploadObjectToIPFS(value);
+      return hash;
+    }));
+
+    // construct root file
+    const rootFile: IPFSRoot = {
+      metadata: this.metadata,
+      pivots,
+      bins: binIPFSHashes
     };
 
-    // upload ipfs nodes in order, with wait time between each upload
-    const sleep = (ms) => {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
-    for (const ipfsNode of ipfsFiles.files) {
-      await this.uploadObjectToPinata(ipfsNode);
-      await sleep(this.UPLOAD_INTERVAL);
-    }
-
-    const ipfsHash = await this.uploadObjectToPinata(ipfsRoot);
-    return ipfsHash;
+    // upload root file
+    const rootHash = await this.uploadObjectToIPFS(rootFile);
+    return rootHash;
   }
 
   private uploadObjectToIPFS(value: any): Promise<string> {
@@ -64,43 +91,5 @@ export class LocalIPFSSearchTree {
         }
       });
     });
-  }
-
-  private async uploadObjectToPinata(value: any): Promise<string> {
-    return fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', { method: 'POST', body: JSON.stringify(value), headers: { Authorization: `Bearer ${this.PINATA_JWT}`, 'Content-Type': 'application/json' }})
-      .then(response => response.json())
-      .then(parsedResponse => parsedResponse.IpfsHash);
-  }
-
-  private async getSubtreeIPFSFiles(subtree: RBTreeNode | null): Promise<SubtreeIPFSFiles> {
-    if (subtree === null) {
-      return {
-        ipfsHash: null,
-        files: []
-      };
-    }
-
-    // do post order visit
-    const ipfsNode: IPFSNode = {
-      key: subtree.data.key,
-      value: subtree.data.value,
-      leftChild: null,
-      rightChild: null
-    };
-    const children = await Promise.all([
-      this.getSubtreeIPFSFiles(subtree.left),
-      this.getSubtreeIPFSFiles(subtree.right)
-    ]);
-    ipfsNode.leftChild = children[0].ipfsHash;
-    ipfsNode.rightChild = children[1].ipfsHash;
-
-    const data = Buffer.from(JSON.stringify(ipfsNode));
-    const hash = await Hash.of(data);
-    const result: SubtreeIPFSFiles = {
-      ipfsHash: hash,
-      files: children[0].files.concat(children[1].files).concat([ipfsNode])
-    };
-
-    return result;
   }
 }

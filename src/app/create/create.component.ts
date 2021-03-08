@@ -13,7 +13,7 @@ type BalanceFormat = { [account: string]: number | string }
   styleUrls: ['./create.component.css']
 })
 export class CreateComponent implements OnInit {
-  IPFS_ENDPOINT = 'ipfs.infura.io';
+  IPFS_ENDPOINT = 'api.thegraph.com';
 
   step: number;
 
@@ -107,20 +107,10 @@ export class CreateComponent implements OnInit {
 
   async uploadTree(merkleTree: any, metadata: any) {
     // create search tree
-    const searchTree = new LocalIPFSSearchTree(this.IPFS_ENDPOINT);
-    for (const account of Object.keys(merkleTree.claims)) {
-      const claim = merkleTree.claims[account];
-      const key = account;
-      const value = {
-        index: claim.index,
-        amount: claim.amount,
-        proof: claim.proof
-      };
-      searchTree.insert(key, value);
-    }
+    const searchTree = new LocalIPFSSearchTree(this.IPFS_ENDPOINT, merkleTree.claims, metadata, 10);
 
     // upload search tree to IPFS
-    this.rootIPFSHash = await searchTree.uploadTreeToIPFS(metadata);
+    this.rootIPFSHash = await searchTree.uploadData();
   }
 
   computeAstrodropAddress(salt: string): Promise<string> {
