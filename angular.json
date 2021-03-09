@@ -121,6 +121,14 @@
               "devServerTarget": "merkle-drop:serve:production"
             }
           }
+        },
+        "deploy": {
+          "builder": "angular-cli-ghpages:deploy",
+          "options": {
+            "baseHref": "https://zeframlou.github.io/astrodrop/",
+            "repo": "git@github.com:ZeframLou/astrodrop.git",
+            "branch": "main"
+          }
         }
       }
     }
