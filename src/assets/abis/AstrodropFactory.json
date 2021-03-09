@@ -1,5 +1,48 @@
 [
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "astrodrop",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "ipfsHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "CreateAstrodrop",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "template",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "salt",
+        "type": "bytes32"
+      }
+    ],
+    "name": "computeAstrodropAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -39,25 +82,6 @@
     "type": "function"
   },
   {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "astrodrop",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "ipfsHash",
-        "type": "bytes32"
-      }
-    ],
-    "name": "CreateAstrodrop",
-    "type": "event"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -65,17 +89,17 @@
         "type": "address"
       },
       {
-        "internalType": "bytes32",
-        "name": "salt",
-        "type": "bytes32"
+        "internalType": "address",
+        "name": "query",
+        "type": "address"
       }
     ],
-    "name": "computeAstrodropAddress",
+    "name": "isAstrodrop",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "bool",
         "name": "",
-        "type": "address"
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
