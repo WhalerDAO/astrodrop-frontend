@@ -8,13 +8,15 @@ export class LocalIPFSSearchTree {
   ipfs: any;
   keyValueMap: any; // maps string to object
   metadata: any;
-  slices: number;
+  updateProgress: any; // callback for updating progress bar
+  binSize: number;
 
-  constructor(ipfsEndpoint: string, data: any, metadata: any, slices: number) {
-    this.ipfs = new IPFS({ host: ipfsEndpoint, port: 5001, protocol: 'https', base: '/ipfs/api/v0' });
+  constructor(ipfsEndpoint: string, data: any, metadata: any, updateProgress: any, binSize: number=500) {
+    this.ipfs = new IPFS({ host: ipfsEndpoint, port: 5001, protocol: 'https', base: '/api/v0' });
     this.keyValueMap = data;
     this.metadata = metadata;
-    this.slices = slices;
+    this.updateProgress = updateProgress;
+    this.binSize = binSize;
   }
 
   async uploadData(): Promise<string> {
@@ -32,30 +34,18 @@ export class LocalIPFSSearchTree {
     // divide data using pivots
     const pivots = [];
     const dataBins = [];
-    const sliceLength = Math.floor(N / this.slices);
-    for (let i = 1; i <= this.slices; i++) {
-      const pivotIdx = i * sliceLength - 1;
+    const numBins = Math.ceil(N / this.binSize);
+    for (let i = 1; i <= numBins; i++) {
+      let pivotIdx = i * this.binSize - 1;
+      if (pivotIdx >= N) {
+        pivotIdx = N - 1;
+      }
       const pivot = sortedKeys[pivotIdx];
       pivots.push(pivot);
 
       const bin = {}
-      const binStartIdx = (i - 1) * sliceLength;
+      const binStartIdx = (i - 1) * this.binSize;
       for (let j = binStartIdx; j <= pivotIdx; j++) {
-        const key = sortedKeys[j];
-        const value = this.keyValueMap[key];
-        bin[key] = value;
-      }
-      dataBins.push(bin);
-    }
-    const leftoverLength = N - this.slices * sliceLength;
-    if (leftoverLength > 0) {
-      // put leftover entries in an additional bin
-      // using the last key as pivot
-      pivots.push(sortedKeys[N - 1]);
-
-      const bin = {}
-      const binStartIdx = this.slices * sliceLength;
-      for (let j = binStartIdx; j <= N - 1; j++) {
         const key = sortedKeys[j];
         const value = this.keyValueMap[key];
         bin[key] = value;
@@ -66,6 +56,7 @@ export class LocalIPFSSearchTree {
     // upload binned data
     const binIPFSHashes = await Promise.all(dataBins.map(async (value) => {
       const hash = await this.uploadObjectToIPFS(value);
+      this.updateProgress(1 / numBins);
       return hash;
     }));
 
@@ -73,7 +64,8 @@ export class LocalIPFSSearchTree {
     const rootFile: IPFSRoot = {
       metadata: this.metadata,
       pivots,
-      bins: binIPFSHashes
+      bins: binIPFSHashes,
+      keys: sortedKeys
     };
 
     // upload root file

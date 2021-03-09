@@ -3,4 +3,5 @@ export interface IPFSRoot {
   metadata: any;
   pivots: string[];
   bins: string[];
+  keys: string[];
 }

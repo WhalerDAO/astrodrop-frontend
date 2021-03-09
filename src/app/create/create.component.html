@@ -1,7 +1,7 @@
 <h1>Create Airdrop</h1>
 
 <ng-container *ngIf="step == 1">
-  <h2>Step 1: Specify the token to be airdropped</h2>
+  <h2>Step 1/5: Specify the token to be airdropped</h2>
 
   <label for="tokenAddress">Address of the airdropped token</label>
   <input type="text" id="tokenAddress" [(ngModel)]="tokenAddressInput">
@@ -10,7 +10,7 @@
 </ng-container>
 
 <ng-container *ngIf="step == 2">
-  <h2>Step 2: Enter recipient addresses and airdrop amounts</h2>
+  <h2>Step 2/5: Enter recipient addresses and airdrop amounts</h2>
 
   Format:
   <pre>
@@ -38,15 +38,27 @@ Number of recipients: {{numRecipients}}
 </ng-container>
 
 <ng-container *ngIf="step == 3">
-  <h2>Step 3: Deploy airdrop smart contract</h2>
+  <h2>Step 3/5: Publish your Astrodrop page to IPFS</h2>
+
+  <div>
+    <button (click)="clickUpload()">Publish</button>
+  </div>
+
+  <p *ngIf="uploadingIPFSFiles">Publishing... ({{uploadIPFSFilesPercentage * 100}}%)</p>
+
+  <a routerLink="/claim/{{rootIPFSHash}}" *ngIf="rootIPFSHash">Your Astrodrop page</a>
+</ng-container>
+
+<ng-container *ngIf="step == 4">
+  <h2>Step 4/5: Deploy airdrop smart contract</h2>
 
   <div>
     <button (click)="clickDeploy()">Deploy</button>
   </div>
 </ng-container>
 
-<ng-container *ngIf="step == 4">
-  <h2>Step 4: Publish your airdrop</h2>
+<ng-container *ngIf="step == 5">
+  <h2>Step 5/5: Last steps</h2>
 
   <p>
     Your Astrodrop contract is being deployed at <a target="_blank"
@@ -58,9 +70,9 @@ Number of recipients: {{numRecipients}}
     the Astrodrop contract.
   </p>
 
-  <button (click)="clickUpload()">Publish your Astrodrop claim page</button>
-
-  <a style="margin-left: 3em;" routerLink="/claim/{{rootIPFSHash}}" *ngIf="rootIPFSHash">Your claim page</a>
+  <p>
+    Your Astrodrop page is available <a routerLink="/claim/{{rootIPFSHash}}" *ngIf="rootIPFSHash">here</a>.
+  </p>
 </ng-container>
 
 <div style="margin-top: 3em;" *ngIf="canContinue">

@@ -4,6 +4,7 @@ import { LocalIPFSSearchTree } from '../../libs/ipfs-search-tree/local-ipfs-sear
 import { WalletService } from '../wallet.service';
 import { ContractService } from '../contract.service';
 import { BigNumber } from 'bignumber.js';
+import Base58 from 'base-58';
 
 type BalanceFormat = { [account: string]: number | string }
 
@@ -13,7 +14,7 @@ type BalanceFormat = { [account: string]: number | string }
   styleUrls: ['./create.component.css']
 })
 export class CreateComponent implements OnInit {
-  IPFS_ENDPOINT = 'api.thegraph.com';
+  IPFS_ENDPOINT = 'api.thegraph.com/ipfs';
 
   step: number;
 
@@ -27,7 +28,11 @@ export class CreateComponent implements OnInit {
   totalAirdropAmount: string;
   tokenSymbol: string;
   numRecipients: number;
+  salt: string;
   canContinue: boolean;
+
+  uploadingIPFSFiles: boolean;
+  uploadIPFSFilesPercentage: number;
 
   constructor(
     public wallet: WalletService,
@@ -42,6 +47,8 @@ export class CreateComponent implements OnInit {
     this.step = 1;
     this.canContinue = false;
     this.numRecipients = 0;
+    this.uploadingIPFSFiles = false;
+    this.uploadIPFSFilesPercentage = 0;
   }
 
   clickNext() {
@@ -64,11 +71,14 @@ export class CreateComponent implements OnInit {
     this.step += 1;
   }
 
-  clickParseBalances() {
+  async clickParseBalances() {
     try {
       this.parseBalances(this.balancesInput);
       this.numRecipients = Object.keys(this.merkleTree.claims).length;
       this.totalAirdropAmount = new BigNumber(this.merkleTree.tokenTotal, 16).div(new BigNumber(10).pow(this.tokenDecimals)).toFixed(this.tokenDecimals);
+      const unixTimestamp = Date.now();
+      this.salt = '0x' + new BigNumber(this.merkleTree.merkleRoot, 16).plus(unixTimestamp).toString(16);
+      this.astrodropContractAddress = await this.computeAstrodropAddress(this.salt);
       this.canContinue = true;
     } catch (error) {
       this.wallet.displayGenericError(error);
@@ -76,23 +86,26 @@ export class CreateComponent implements OnInit {
   }
 
   async clickDeploy() {
-    const unixTimestamp = Date.now();
-    const salt = '0x' + new BigNumber(this.merkleTree.merkleRoot, 16).plus(unixTimestamp).toString(16);
-    this.astrodropContractAddress = await this.computeAstrodropAddress(salt);
-    this.deployAstrodropContract(this.tokenAddressInput, this.merkleTree.merkleRoot, salt);
+    this.deployAstrodropContract(this.tokenAddressInput, this.merkleTree.merkleRoot, this.salt, this.rootIPFSHash);
   }
 
-  clickUpload() {
+  async clickUpload() {
     const metadata = {
       contractAddress: this.astrodropContractAddress,
       merkleRoot: this.merkleTree.merkleRoot,
       tokenAddress: this.tokenAddressInput,
       tokenTotal: this.merkleTree.tokenTotal
     };
-    this.uploadTree(this.merkleTree, metadata);
+    this.uploadingIPFSFiles = true;
+    const updateProgress = (percentageChange) => {
+      this.uploadIPFSFilesPercentage += percentageChange;
+    }
+    await this.uploadTree(this.merkleTree, metadata, updateProgress);
+    this.canContinue = true;
+    this.uploadingIPFSFiles = false;
   }
 
-  parseBalances(rawBalances: string) {
+  private parseBalances(rawBalances: string) {
     // parse balances
     const balances: BalanceFormat = JSON.parse(rawBalances);
 
@@ -105,28 +118,32 @@ export class CreateComponent implements OnInit {
     this.merkleTree = parseBalanceMap(balances);
   }
 
-  async uploadTree(merkleTree: any, metadata: any) {
+  private async uploadTree(merkleTree: any, metadata: any, updateProgress: any) {
     // create search tree
-    const searchTree = new LocalIPFSSearchTree(this.IPFS_ENDPOINT, merkleTree.claims, metadata, 10);
+    const searchTree = new LocalIPFSSearchTree(this.IPFS_ENDPOINT, merkleTree.claims, metadata, updateProgress);
 
     // upload search tree to IPFS
     this.rootIPFSHash = await searchTree.uploadData();
   }
 
-  computeAstrodropAddress(salt: string): Promise<string> {
+  private computeAstrodropAddress(salt: string): Promise<string> {
     const astrodropFactoryContract = this.contracts.getNamedContract('AstrodropFactory');
     const astrodropTemplateAddress = this.contracts.getNamedContractAddress('Astrodrop');
     return astrodropFactoryContract.methods.computeAstrodropAddress(astrodropTemplateAddress, salt).call();
   }
 
-  deployAstrodropContract(tokenAddress: string, merkleRoot: string, salt: string) {
+  private deployAstrodropContract(tokenAddress: string, merkleRoot: string, salt: string, ipfsHash: string) {
+    // convert ipfsHash to 32 bytes by removing the first two bytes
+    const truncatedIPFSHash = this.wallet.web3.utils.bytesToHex(Base58.decode(ipfsHash).slice(2));
+
     const astrodropFactoryContract = this.contracts.getNamedContract('AstrodropFactory');
     const astrodropTemplateAddress = this.contracts.getNamedContractAddress('Astrodrop');
     const func = astrodropFactoryContract.methods.createAstrodrop(
       astrodropTemplateAddress,
       tokenAddress,
       merkleRoot,
-      salt
+      salt,
+      truncatedIPFSHash
     );
     return this.wallet.sendTx(func, () => { this.canContinue = true; }, () => { }, (error) => { this.wallet.displayGenericError(error) });
   }
