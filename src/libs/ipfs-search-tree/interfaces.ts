@@ -1,4 +1,15 @@
-// Interface for the root IPFS file
+// Metadata interface
+export interface Metadata {
+  name: string;
+  description: string;
+  logoURL: string;
+  contractAddress: string;
+  merkleRoot: string;
+  tokenAddress: string;
+  tokenTotal: string; // In hex
+}
+
+// The root IPFS file
 export interface IPFSRoot {
   metadata: any;
   pivots: string[];

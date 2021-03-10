@@ -1,20 +1,20 @@
 import { BigNumber } from 'bignumber.js';
-import IPFS from '../ipfs-mini';
-import { IPFSRoot } from './interfaces';
+import { IPFSRoot, Metadata } from './interfaces';
+import { IPFSHelper } from './ipfs-helper';
 
 // Used for searching a remote tree
 export class RemoteIPFSSearchTree {
-  ipfs: any;
+  ipfsHelper: IPFSHelper;
   rootIPFSHash: string;
   rootFile: IPFSRoot;
 
   constructor(ipfsEndpoint: string, rootIPFSHash: string) {
-    this.ipfs = new IPFS({ host: ipfsEndpoint, port: 5001, protocol: 'https', base: '/api/v0' });
+    this.ipfsHelper = new IPFSHelper(ipfsEndpoint);
     this.rootIPFSHash = rootIPFSHash;
   }
 
   async init() {
-    this.rootFile = await this.getObjectFromIPFS(this.rootIPFSHash);
+    this.rootFile = await this.ipfsHelper.getObjectFromIPFS(this.rootIPFSHash);
   }
 
   async find(key: string): Promise<any> {
@@ -25,7 +25,7 @@ export class RemoteIPFSSearchTree {
       const keyNum = new BigNumber(key.substr(2).toLowerCase(), 16);
       if (keyNum.lte(pivotNum)) {
         // found pivot, fetch bin
-        const bin = await this.getObjectFromIPFS(this.rootFile.bins[i]);
+        const bin = await this.ipfsHelper.getObjectFromIPFS(this.rootFile.bins[i]);
 
         // find value in bin
         return bin[key];
@@ -34,22 +34,7 @@ export class RemoteIPFSSearchTree {
     return null;
   }
 
-  get metadata(): any {
+  get metadata(): Metadata {
     return this.rootFile.metadata;
-  }
-
-  private async getObjectFromIPFS(ipfsHash: string | null): Promise<any> {
-    if (ipfsHash === null) {
-      return null;
-    }
-    return new Promise((resolve, reject) => {
-      this.ipfs.catJSON(ipfsHash, (err, result) => {
-        if (err != null) {
-          reject(err);
-        } else {
-          resolve(result);
-        }
-      });
-    });
   }
 }

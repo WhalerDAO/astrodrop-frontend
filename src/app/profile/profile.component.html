@@ -1,0 +1,15 @@
+<h1>Your profile</h1>
+
+<h2>Eligible Astrodrops</h2>
+
+<ng-container *ngFor="let drop of eligibleAstrodrops">
+  <img src={{drop.logoURL}}>
+  <a routerLink="/claim/{{drop.ipfsHash}}">{{drop.name}}</a>
+</ng-container>
+
+<h2>My Astrodrops</h2>
+
+<ng-container *ngFor="let drop of createdAstrodrops">
+  <img src={{drop.logoURL}}>
+  <a routerLink="/claim/{{drop.ipfsHash}}">{{drop.name}}</a>
+</ng-container>

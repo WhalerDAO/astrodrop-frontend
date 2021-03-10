@@ -25,6 +25,7 @@
     "bnc-onboard": "^1.19.2",
     "ethereumjs-util": "^7.0.7",
     "ethers": "^5.0.25",
+    "graphql-request": "^3.4.0",
     "ipfs-only-hash": "^2.0.1",
     "node-fetch": "^2.6.1",
     "rxjs": "~6.6.0",

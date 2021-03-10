@@ -1,18 +1,17 @@
-import IPFS from '../ipfs-mini';
-import { IPFSRoot } from './interfaces';
-import Hash from 'ipfs-only-hash';
+import { IPFSRoot, Metadata } from './interfaces';
 import BigNumber from 'bignumber.js';
+import { IPFSHelper } from './ipfs-helper';
 
 // Used for creating & uploading a tree
 export class LocalIPFSSearchTree {
-  ipfs: any;
+  ipfsHelper: IPFSHelper;
   keyValueMap: any; // maps string to object
-  metadata: any;
+  metadata: Metadata;
   updateProgress: any; // callback for updating progress bar
   binSize: number;
 
-  constructor(ipfsEndpoint: string, data: any, metadata: any, updateProgress: any, binSize: number=500) {
-    this.ipfs = new IPFS({ host: ipfsEndpoint, port: 5001, protocol: 'https', base: '/api/v0' });
+  constructor(ipfsEndpoint: string, data: any, metadata: Metadata, updateProgress: any, binSize: number=500) {
+    this.ipfsHelper = new IPFSHelper(ipfsEndpoint);
     this.keyValueMap = data;
     this.metadata = metadata;
     this.updateProgress = updateProgress;
@@ -55,7 +54,7 @@ export class LocalIPFSSearchTree {
 
     // upload binned data
     const binIPFSHashes = await Promise.all(dataBins.map(async (value) => {
-      const hash = await this.uploadObjectToIPFS(value);
+      const hash = await this.ipfsHelper.uploadObjectToIPFS(value);
       this.updateProgress(1 / numBins);
       return hash;
     }));
@@ -69,19 +68,7 @@ export class LocalIPFSSearchTree {
     };
 
     // upload root file
-    const rootHash = await this.uploadObjectToIPFS(rootFile);
+    const rootHash = await this.ipfsHelper.uploadObjectToIPFS(rootFile);
     return rootHash;
-  }
-
-  private uploadObjectToIPFS(value: any): Promise<string> {
-    return new Promise((resolve, reject) => {
-      this.ipfs.addJSON(value, (err, result) => {
-        if (err != null) {
-          reject(err);
-        } else {
-          resolve(result);
-        }
-      });
-    });
   }
 }

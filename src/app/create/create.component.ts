@@ -5,6 +5,7 @@ import { WalletService } from '../wallet.service';
 import { ContractService } from '../contract.service';
 import { BigNumber } from 'bignumber.js';
 import Base58 from 'base-58';
+import { Metadata } from 'src/libs/ipfs-search-tree/interfaces';
 
 type BalanceFormat = { [account: string]: number | string }
 
@@ -90,7 +91,10 @@ export class CreateComponent implements OnInit {
   }
 
   async clickUpload() {
-    const metadata = {
+    const metadata: Metadata = {
+      name: 'Test Astrodrop',
+      description: 'This is a test astrodrop',
+      logoURL: 'https://www.ancient-code.com/wp-content/uploads/2014/12/Asteroid-Impact.jpg',
       contractAddress: this.astrodropContractAddress,
       merkleRoot: this.merkleTree.merkleRoot,
       tokenAddress: this.tokenAddressInput,
