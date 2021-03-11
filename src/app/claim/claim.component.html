@@ -1,14 +1,10 @@
-<h1>Claim Airdrop</h1>
-
 <ng-container *ngIf="!finishedLoadingRoot">
   Loading...
 </ng-container>
 <ng-container *ngIf="finishedLoadingRoot">
-  <img src={{remoteTree.metadata.logoURL}}>
+  <img src={{remoteTree.metadata.logoURL}} style="height: 128px;">
 
-  <h2>{{remoteTree.metadata.name}}</h2>
-
-  <p>{{remoteTree.metadata.description}}</p>
+  <h1 style="margin-top: 0%;">{{remoteTree.metadata.name}}</h1>
 
   <label for="claimAddressInput">Claimant address</label>
   <input id="claimAddressInput" type="text" (input)="claimAddress = $event.target.value">
@@ -22,4 +18,6 @@
   <p *ngIf="finishedCheckingClaim && claimed">
     This address has already claimed from this airdrop.
   </p>
+
+  <markdown [data]="remoteTree.metadata.description" lineNumbers emoji katex></markdown>
 </ng-container>

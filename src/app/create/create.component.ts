@@ -21,6 +21,9 @@ export class CreateComponent implements OnInit {
 
   balancesInput: string;
   tokenAddressInput: string;
+  nameInput: string;
+  descriptionInput: string;
+  logoURLInput: string;
 
   rootIPFSHash: string;
   merkleTree: any;
@@ -45,6 +48,9 @@ export class CreateComponent implements OnInit {
   ngOnInit(): void {
     this.balancesInput = '';
     this.tokenAddressInput = '';
+    this.nameInput = '';
+    this.descriptionInput = '';
+    this.logoURLInput = '';
     this.step = 1;
     this.canContinue = false;
     this.numRecipients = 0;
@@ -92,9 +98,9 @@ export class CreateComponent implements OnInit {
 
   async clickUpload() {
     const metadata: Metadata = {
-      name: 'Test Astrodrop',
-      description: 'This is a test astrodrop',
-      logoURL: 'https://www.ancient-code.com/wp-content/uploads/2014/12/Asteroid-Impact.jpg',
+      name: this.nameInput,
+      description: this.descriptionInput,
+      logoURL: this.logoURLInput,
       contractAddress: this.astrodropContractAddress,
       merkleRoot: this.merkleTree.merkleRoot,
       tokenAddress: this.tokenAddressInput,

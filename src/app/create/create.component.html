@@ -1,4 +1,4 @@
-<h1>Create Airdrop</h1>
+<h1>Create airdrop</h1>
 
 <ng-container *ngIf="step == 1">
   <h2>Step 1/5: Specify the token to be airdropped</h2>
@@ -39,6 +39,21 @@ Number of recipients: {{numRecipients}}
 
 <ng-container *ngIf="step == 3">
   <h2>Step 3/5: Publish your Astrodrop page to IPFS</h2>
+
+  <label for="name">Astrodrop title</label>
+  <input type="text" id="name" [(ngModel)]="nameInput">
+
+  <label for="logoURL">Logo URL</label>
+  <input type="text" id="logoURL" [(ngModel)]="logoURLInput">
+
+  <label for="descriptionPreview">Logo preview</label>
+  <img style="height: 128px;" [src]="logoURLInput" *ngIf="logoURLInput !== ''">
+
+  <label for="description">Description</label>
+  <textarea id="description" style="height: 10em;" [(ngModel)]="descriptionInput"></textarea>
+
+  <label for="descriptionPreview">Description preview</label>
+  <markdown id="descriptionPreview" [data]="descriptionInput" lineNumbers emoji katex></markdown>
 
   <div>
     <button (click)="clickUpload()">Publish</button>
