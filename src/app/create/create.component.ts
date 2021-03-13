@@ -24,6 +24,8 @@ export class CreateComponent implements OnInit {
   nameInput: string;
   descriptionInput: string;
   logoURLInput: string;
+  expirationDateInput: string;
+  expirationTimeInput: string;
 
   rootIPFSHash: string;
   merkleTree: any;
@@ -51,6 +53,8 @@ export class CreateComponent implements OnInit {
     this.nameInput = '';
     this.descriptionInput = '';
     this.logoURLInput = '';
+    this.expirationDateInput = '';
+    this.expirationTimeInput = '';
     this.step = 1;
     this.canContinue = false;
     this.numRecipients = 0;
@@ -93,7 +97,8 @@ export class CreateComponent implements OnInit {
   }
 
   async clickDeploy() {
-    this.deployAstrodropContract(this.tokenAddressInput, this.merkleTree.merkleRoot, this.salt, this.rootIPFSHash);
+    const expirationTimestamp = Math.floor(Date.parse(`${this.expirationDateInput} ${this.expirationTimeInput}`) / 1e3);
+    this.deployAstrodropContract(this.tokenAddressInput, this.merkleTree.merkleRoot, expirationTimestamp, this.salt, this.rootIPFSHash);
   }
 
   async clickUpload() {
@@ -142,7 +147,7 @@ export class CreateComponent implements OnInit {
     return astrodropFactoryContract.methods.computeAstrodropAddress(astrodropTemplateAddress, salt).call();
   }
 
-  private deployAstrodropContract(tokenAddress: string, merkleRoot: string, salt: string, ipfsHash: string) {
+  private deployAstrodropContract(tokenAddress: string, merkleRoot: string, expireTimestamp: number, salt: string, ipfsHash: string) {
     // convert ipfsHash to 32 bytes by removing the first two bytes
     const truncatedIPFSHash = this.wallet.web3.utils.bytesToHex(Base58.decode(ipfsHash).slice(2));
 
@@ -152,6 +157,7 @@ export class CreateComponent implements OnInit {
       astrodropTemplateAddress,
       tokenAddress,
       merkleRoot,
+      expireTimestamp,
       salt,
       truncatedIPFSHash
     );

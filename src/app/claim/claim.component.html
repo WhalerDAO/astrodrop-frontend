@@ -6,6 +6,11 @@
 
   <h1 style="margin-top: 0%;">{{remoteTree.metadata.name}}</h1>
 
+  <a target="_blank" href="https://rinkeby.etherscan.io/address/{{remoteTree.metadata.contractAddress}}"><small>View
+      smart contract on Etherscan</small></a>
+  <br>
+  <small>Expires at {{expirationTime}}</small>
+
   <label for="claimAddressInput">Claimant address</label>
   <input id="claimAddressInput" type="text" (input)="claimAddress = $event.target.value">
   <button (click)="clickCheck()">Check</button>
@@ -18,6 +23,14 @@
   <p *ngIf="finishedCheckingClaim && claimed">
     This address has already claimed from this airdrop.
   </p>
+
+  <ng-container *ngIf="sweepEnabled">
+    <p>
+      It appears that you are the owner of this airdrop, and the airdrop has expired. You can sweep the unclaimed tokens
+      into your wallet.
+    </p>
+    <button (click)="clickSweep()">Sweep</button>
+  </ng-container>
 
   <markdown [data]="remoteTree.metadata.description" lineNumbers emoji katex></markdown>
 </ng-container>

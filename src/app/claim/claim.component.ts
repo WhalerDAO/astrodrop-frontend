@@ -23,6 +23,8 @@ export class ClaimComponent implements OnInit {
   claimed: boolean;
   finishedLoadingRoot: boolean;
   finishedCheckingClaim: boolean;
+  expirationTime: string;
+  sweepEnabled: boolean;
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -34,7 +36,15 @@ export class ClaimComponent implements OnInit {
     this.rootIPFSHash = this.activatedRoute.snapshot.paramMap.get('rootIPFSHash');
     this.remoteTree = new RemoteIPFSSearchTree(this.IPFS_ENDPOINT, this.rootIPFSHash);
     await this.remoteTree.init();
+
+    const readonlyWeb3 = this.wallet.readonlyWeb3();
+    const astrodropContract = this.contracts.getContract(this.remoteTree.metadata.contractAddress, 'Astrodrop', readonlyWeb3);
+    const expireTimestamp = (+await astrodropContract.methods.expireTimestamp().call()) * 1e3
+    this.expirationTime = new Date(expireTimestamp).toString();
     this.finishedLoadingRoot = true;
+
+    const owner = await astrodropContract.methods.owner().call();
+    this.sweepEnabled = Date.now() >= expireTimestamp && this.wallet.userAddress.toLowerCase() === owner.toLowerCase();
   }
 
   resetData() {
@@ -54,6 +64,10 @@ export class ClaimComponent implements OnInit {
 
   clickClaim() {
     this.claimAirdrop(this.claimAddress, this.userClaim);
+  }
+
+  clickSweep() {
+    this.sweep();
   }
 
   async getClaim(address: string) {
@@ -93,6 +107,13 @@ export class ClaimComponent implements OnInit {
   claimAirdrop(claimAddress: string, claim: any) {
     const astrodropContract = this.contracts.getContract(this.remoteTree.metadata.contractAddress, 'Astrodrop');
     const func = astrodropContract.methods.claim(claim.index, claimAddress, claim.amount, claim.proof);
+
+    this.wallet.sendTx(func, () => { }, () => { }, (error) => { this.wallet.displayGenericError(error) });
+  }
+
+  sweep() {
+    const astrodropContract = this.contracts.getContract(this.remoteTree.metadata.contractAddress, 'Astrodrop');
+    const func = astrodropContract.methods.sweep(this.remoteTree.metadata.tokenAddress, this.wallet.userAddress);
 
     this.wallet.sendTx(func, () => { }, () => { }, (error) => { this.wallet.displayGenericError(error) });
   }

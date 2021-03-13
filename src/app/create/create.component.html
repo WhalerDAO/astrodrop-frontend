@@ -67,6 +67,12 @@ Number of recipients: {{numRecipients}}
 <ng-container *ngIf="step == 4">
   <h2>Step 4/5: Deploy airdrop smart contract</h2>
 
+  <label for="expirationDate">Expiration time</label>
+  <input type="date" id="expirationDate" [(ngModel)]="expirationDateInput">
+  <input type="time" id="expirationTime" [(ngModel)]="expirationTimeInput">
+  <br>
+  <small>After the expiration time, you will be able to withdraw the unredeemed tokens.</small>
+
   <div>
     <button (click)="clickDeploy()">Deploy</button>
   </div>
