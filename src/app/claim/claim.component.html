@@ -16,7 +16,12 @@
   <button (click)="clickCheck()">Check</button>
 
   <ng-container *ngIf="finishedCheckingClaim && !claimed">
-    <p>Claimable amount: {{claimableAmount}} {{claimTokenSymbol}}</p>
+    <ng-container *ngIf="remoteTree.metadata.tokenType === '20'">
+      <p>Claimable amount: {{claimableAmount}} {{claimTokenSymbol}}</p>
+    </ng-container>
+    <ng-container *ngIf="remoteTree.metadata.tokenType === '721'">
+      <p>Claimable NFT ID: {{claimableAmount}} of {{claimTokenSymbol}}</p>
+    </ng-container>
     <button (click)="clickClaim()">Claim</button>
   </ng-container>
 
