@@ -7,6 +7,7 @@ export interface Metadata {
   merkleRoot: string;
   tokenAddress: string;
   tokenTotal: string; // In hex
+  tokenType: string;
 }
 
 // The root IPFS file

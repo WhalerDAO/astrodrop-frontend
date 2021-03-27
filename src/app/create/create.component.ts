@@ -6,6 +6,7 @@ import { ContractService } from '../contract.service';
 import { BigNumber } from 'bignumber.js';
 import Base58 from 'base-58';
 import { Metadata } from 'src/libs/ipfs-search-tree/interfaces';
+import Papa from 'papaparse';
 
 type BalanceFormat = { [account: string]: number | string }
 
@@ -20,6 +21,7 @@ export class CreateComponent implements OnInit {
   step: number;
 
   balancesInput: string;
+  tokenTypeInput: string;
   tokenAddressInput: string;
   nameInput: string;
   descriptionInput: string;
@@ -49,6 +51,7 @@ export class CreateComponent implements OnInit {
 
   ngOnInit(): void {
     this.balancesInput = '';
+    this.tokenTypeInput = '20';
     this.tokenAddressInput = '';
     this.nameInput = '';
     this.descriptionInput = '';
@@ -75,10 +78,16 @@ export class CreateComponent implements OnInit {
     }
 
     const tokenContract = this.contracts.getERC20(this.tokenAddressInput, this.wallet.readonlyWeb3());
-    await Promise.all([
-      tokenContract.methods.decimals().call().then(decimals => this.tokenDecimals = +decimals),
-      tokenContract.methods.symbol().call().then(symbol => this.tokenSymbol = symbol)
-    ]);
+    if (this.tokenTypeInput === '20') {
+      await Promise.all([
+        tokenContract.methods.decimals().call().then(decimals => this.tokenDecimals = +decimals),
+        tokenContract.methods.symbol().call().then(symbol => this.tokenSymbol = symbol)
+      ]);
+    } else if (this.tokenTypeInput === '721') {
+      await tokenContract.methods.symbol().call().then(symbol => this.tokenSymbol = symbol);
+      this.tokenDecimals = 0;
+    }
+
     this.step += 1;
   }
 
@@ -86,7 +95,11 @@ export class CreateComponent implements OnInit {
     try {
       this.parseBalances(this.balancesInput);
       this.numRecipients = Object.keys(this.merkleTree.claims).length;
-      this.totalAirdropAmount = new BigNumber(this.merkleTree.tokenTotal, 16).div(new BigNumber(10).pow(this.tokenDecimals)).toFixed(this.tokenDecimals);
+      if (this.tokenTypeInput === '20') {
+        this.totalAirdropAmount = new BigNumber(this.merkleTree.tokenTotal, 16).div(new BigNumber(10).pow(this.tokenDecimals)).toFixed(this.tokenDecimals);
+      } else if (this.tokenTypeInput === '721') {
+        this.totalAirdropAmount = new BigNumber(this.numRecipients).toFixed();
+      }
       const unixTimestamp = Date.now();
       this.salt = '0x' + new BigNumber(this.merkleTree.merkleRoot, 16).plus(unixTimestamp).toString(16);
       this.astrodropContractAddress = await this.computeAstrodropAddress(this.salt);
@@ -109,7 +122,8 @@ export class CreateComponent implements OnInit {
       contractAddress: this.astrodropContractAddress,
       merkleRoot: this.merkleTree.merkleRoot,
       tokenAddress: this.tokenAddressInput,
-      tokenTotal: this.merkleTree.tokenTotal
+      tokenTotal: this.merkleTree.tokenTotal,
+      tokenType: this.tokenTypeInput
     };
     this.uploadingIPFSFiles = true;
     const updateProgress = (percentageChange) => {
@@ -120,13 +134,24 @@ export class CreateComponent implements OnInit {
     this.uploadingIPFSFiles = false;
   }
 
-  private parseBalances(rawBalances: string) {
-    // parse balances
-    const balances: BalanceFormat = JSON.parse(rawBalances);
+  clickSetApprovalForAll() {
+    this.setApprovalForAll(this.tokenAddressInput, this.astrodropContractAddress);
+  }
 
-    // convert balances to hexadecimal
-    for (let claimant of Object.keys(balances)) {
-      balances[claimant] = new BigNumber(balances[claimant]).times(new BigNumber(10).pow(this.tokenDecimals)).integerValue().toString(16);
+  private parseBalances(rawBalances: string) {
+    // parse CSV balances to JSON
+    const parseResults = Papa.parse(rawBalances);
+    const balances: BalanceFormat = {};
+    if (parseResults.errors.length > 0) {
+      throw parseResults.errors[0];
+    }
+    for (const row of parseResults.data) {
+      if (row.length != 2) {
+        throw new Error(`Invalid row: ${row}`);
+      }
+      const claimant = row[0];
+      const balance = row[1];
+      balances[claimant] = new BigNumber(balance).times(new BigNumber(10).pow(this.tokenDecimals)).integerValue().toString(16);
     }
 
     // create merkle tree
@@ -143,7 +168,12 @@ export class CreateComponent implements OnInit {
 
   private computeAstrodropAddress(salt: string): Promise<string> {
     const astrodropFactoryContract = this.contracts.getNamedContract('AstrodropFactory');
-    const astrodropTemplateAddress = this.contracts.getNamedContractAddress('Astrodrop');
+    let astrodropTemplateAddress;
+    if (this.tokenTypeInput === '20') {
+      astrodropTemplateAddress = this.contracts.getNamedContractAddress('Astrodrop');
+    } else if (this.tokenTypeInput === '721') {
+      astrodropTemplateAddress = this.contracts.getNamedContractAddress('AstrodropERC721');
+    }
     return astrodropFactoryContract.methods.computeAstrodropAddress(astrodropTemplateAddress, salt).call();
   }
 
@@ -152,7 +182,12 @@ export class CreateComponent implements OnInit {
     const truncatedIPFSHash = this.wallet.web3.utils.bytesToHex(Base58.decode(ipfsHash).slice(2));
 
     const astrodropFactoryContract = this.contracts.getNamedContract('AstrodropFactory');
-    const astrodropTemplateAddress = this.contracts.getNamedContractAddress('Astrodrop');
+    let astrodropTemplateAddress;
+    if (this.tokenTypeInput === '20') {
+      astrodropTemplateAddress = this.contracts.getNamedContractAddress('Astrodrop');
+    } else if (this.tokenTypeInput === '721') {
+      astrodropTemplateAddress = this.contracts.getNamedContractAddress('AstrodropERC721');
+    }
     const func = astrodropFactoryContract.methods.createAstrodrop(
       astrodropTemplateAddress,
       tokenAddress,
@@ -162,5 +197,12 @@ export class CreateComponent implements OnInit {
       truncatedIPFSHash
     );
     return this.wallet.sendTx(func, () => { this.canContinue = true; }, () => { }, (error) => { this.wallet.displayGenericError(error) });
+  }
+
+  setApprovalForAll(tokenAddress: string, astrodropAddress: string) {
+    const tokenContract = this.contracts.getContract(tokenAddress, 'ERC721');
+    const func = tokenContract.methods.setApprovalForAll(astrodropAddress, true);
+
+    return this.wallet.sendTx(func, () => { }, () => { }, (error) => { this.wallet.displayGenericError(error) });
   }
 }

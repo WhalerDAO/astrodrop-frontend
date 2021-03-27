@@ -95,7 +95,12 @@ export class ClaimComponent implements OnInit {
     this.claimTokenSymbol = await tokenContract.methods.symbol().call();
 
     if (!this.claimed) {
-      const tokenDecimals = +await tokenContract.methods.decimals().call();
+      let tokenDecimals;
+      if (this.remoteTree.metadata.tokenType === '20') {
+        tokenDecimals = +await tokenContract.methods.decimals().call();
+      } else if (this.remoteTree.metadata.tokenType === '721') {
+        tokenDecimals = 0;
+      }
       const tokenPrecision = new BigNumber(10).pow(tokenDecimals);
       this.airdropBalance = new BigNumber(this.userClaim.amount, 16).div(tokenPrecision);
       this.claimableAmount = this.airdropBalance.toFixed(tokenDecimals);

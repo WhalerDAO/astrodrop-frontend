@@ -3,28 +3,48 @@
 <ng-container *ngIf="step == 1">
   <h2>Step 1/5: Specify the token to be airdropped</h2>
 
-  <label for="tokenAddress">Address of the airdropped token</label>
+  <label for="tokenType">Token type</label>
+  <select id="tokenType" [(ngModel)]="tokenTypeInput">
+    <option value="20" selected>ERC-20</option>
+    <option value="721">ERC-721</option>
+  </select>
+
+  <label for="tokenAddress">Token address</label>
   <input type="text" id="tokenAddress" [(ngModel)]="tokenAddressInput">
 
   <button (click)="clickConfirmToken()">Confirm</button>
 </ng-container>
 
 <ng-container *ngIf="step == 2">
-  <h2>Step 2/5: Enter recipient addresses and airdrop amounts</h2>
+  <ng-container *ngIf="tokenTypeInput === '20'">
+    <h2>Step 2/5: Enter recipient addresses and airdrop amounts</h2>
 
-  Format:
-  <pre>
-{{ '{' }}
-  "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045": "420.69",
-  "0x46e01e73074937FEFb4104B5597Df32370172f86": "1234.5678",
-  ...
-{{ '}' }}
-  </pre>
+    Format:
+    <pre>
+0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045,420.69
+0x46e01e73074937FEFb4104B5597Df32370172f86,1234.5678
+    </pre>
 
-  <p>
-    The airdrop amounts should be in decimal, and the number of decimals should not exceed the maximum supported by the
-    airdropped token.
-  </p>
+    <p>
+      The airdrop amounts should be in decimal, and the number of decimals should not exceed the maximum supported by
+      the
+      airdropped token.
+    </p>
+  </ng-container>
+
+  <ng-container *ngIf="tokenTypeInput === '721'">
+    <h2>Step 2/5: Enter recipient addresses and airdrop token IDs</h2>
+
+    Format:
+    <pre>
+0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045,2
+0x46e01e73074937FEFb4104B5597Df32370172f86,10
+    </pre>
+
+    <p>
+      Note: you can only airdrop a single NFT to each address.
+    </p>
+  </ng-container>
 
   <textarea style="height: 10em;" [(ngModel)]="balancesInput"></textarea>
 
@@ -86,10 +106,28 @@ Number of recipients: {{numRecipients}}
       href="https://rinkeby.etherscan.io/address/{{astrodropContractAddress}}">{{astrodropContractAddress}}</a>.
   </p>
 
-  <p>
-    Important note: You need to send the tokens to be airdropped ({{totalAirdropAmount}} {{tokenSymbol}}) to
-    the Astrodrop contract.
-  </p>
+  <ng-container *ngIf="tokenTypeInput === '20'">
+    <p>
+      Important note: You need to send the tokens to be airdropped ({{totalAirdropAmount}} {{tokenSymbol}}) to
+      your Astrodrop contract, so that the contract can distribute the tokens to the claimants.
+    </p>
+  </ng-container>
+
+  <ng-container *ngIf="tokenTypeInput === '721'">
+    <p>
+      Important note: You need to give your Astrodrop contract approval to transfer your ERC-721 NFTs in order for the
+      airdrop to be functional.
+    </p>
+
+    <p>
+      <small>
+        If the NFTs are owned by a different account than the one you're using right now (e.g. a multi-signature
+        wallet), please call <code>setApprovalForAll(astrodropAddress)</code> on the NFT contract using that account.
+      </small>
+    </p>
+
+    <button (click)="clickSetApprovalForAll()">Give approval</button>
+  </ng-container>
 
   <p>
     Your Astrodrop page is available <a routerLink="/claim/{{rootIPFSHash}}" *ngIf="rootIPFSHash">here</a>.
