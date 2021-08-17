@@ -19,6 +19,7 @@
     "@angular/platform-browser": "~10.2.0",
     "@angular/platform-browser-dynamic": "~10.2.0",
     "@angular/router": "~10.2.0",
+    "@pinata/sdk": "^1.1.23",
     "base-58": "^0.0.1",
     "bignumber.js": "^9.0.1",
     "bnc-notify": "^1.5.1",
@@ -56,5 +57,10 @@
     "ts-node": "~8.3.0",
     "tslint": "~6.1.0",
     "typescript": "~4.0.2"
+  },
+  "browser": {
+    "fs": false,
+    "os": false,
+    "path": false
   }
 }
