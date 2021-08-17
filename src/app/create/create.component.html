@@ -81,7 +81,7 @@ Number of recipients: {{numRecipients}}
 
   <p *ngIf="uploadingIPFSFiles">Publishing... ({{uploadIPFSFilesPercentage * 100}}%)</p>
 
-  <a routerLink="/claim/{{rootIPFSHash}}" *ngIf="rootIPFSHash">Your Astrodrop page</a>
+  <p *ngIf="rootIPFSHash">Success!</p>
 </ng-container>
 
 <ng-container *ngIf="step == 4">
@@ -134,6 +134,6 @@ Number of recipients: {{numRecipients}}
   </p>
 </ng-container>
 
-<div style="margin-top: 3em;" *ngIf="canContinue">
-  <button style="float: right;" (click)="clickNext()">▶</button>
+<div *ngIf="canContinue">
+  <button style="float: right; margin-bottom: 3em;" (click)="clickNext()">Next step</button>
 </div>
