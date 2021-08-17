@@ -1,19 +1,28 @@
-<div style="display: flex; justify-content: space-between;">
-  <a routerLink="">
-    <h1 style="">Astrodrop</h1>
-  </a>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container">
+    <a class="navbar-brand mr-auto" routerLink="">Astrodrop</a>
 
-  <div style="margin-top: 40px;">
-    <a style="margin-right: 10px;" routerLink="/profile/{{wallet.userAddress}}" *ngIf="wallet.connected">
-      My profile
-    </a>
-    <button (click)="connectWallet()">
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a
+          class="nav-link"
+          routerLink="/profile/{{ wallet.userAddress }}"
+          *ngIf="wallet.connected"
+        >
+          My profile
+        </a>
+      </li>
+    </ul>
+
+    <button
+      class="btn btn-primary"
+      type="button"
+      (click)="connectWallet()"
+    >
       <div *ngIf="wallet.connected">
-        {{wallet.userAddress.substring(0, 14)}}
+        {{ wallet.userAddress.substring(0, 14) }}
       </div>
-      <div *ngIf="!wallet.connected">
-        Connect Wallet
-      </div>
+      <div *ngIf="!wallet.connected">Connect Wallet</div>
     </button>
   </div>
-</div>
+</nav>
