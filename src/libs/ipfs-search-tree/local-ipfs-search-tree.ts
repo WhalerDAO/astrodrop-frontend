@@ -9,13 +9,22 @@ export class LocalIPFSSearchTree {
   metadata: Metadata;
   updateProgress: any; // callback for updating progress bar
   binSize: number;
+  uploadDelayMs: number; // the delay between bin IPFS uploads in ms
 
-  constructor(ipfsEndpoint: string, data: any, metadata: Metadata, updateProgress: any, binSize: number=500) {
+  constructor(
+    ipfsEndpoint: string,
+    data: any,
+    metadata: Metadata,
+    updateProgress: any,
+    binSize: number = 500,
+    uploadDelayMs: number = 100
+  ) {
     this.ipfsHelper = new IPFSHelper(ipfsEndpoint);
     this.keyValueMap = data;
     this.metadata = metadata;
     this.updateProgress = updateProgress;
     this.binSize = binSize;
+    this.uploadDelayMs = uploadDelayMs;
   }
 
   async uploadData(): Promise<string> {
@@ -42,7 +51,7 @@ export class LocalIPFSSearchTree {
       const pivot = sortedKeys[pivotIdx];
       pivots.push(pivot);
 
-      const bin = {}
+      const bin = {};
       const binStartIdx = (i - 1) * this.binSize;
       for (let j = binStartIdx; j <= pivotIdx; j++) {
         const key = sortedKeys[j];
@@ -53,18 +62,23 @@ export class LocalIPFSSearchTree {
     }
 
     // upload binned data
-    const binIPFSHashes = await Promise.all(dataBins.map(async (value) => {
+    function sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+    const binIPFSHashes = [];
+    for (const value of dataBins) {
       const hash = await this.ipfsHelper.uploadObjectToIPFS(value);
       this.updateProgress(1 / numBins);
-      return hash;
-    }));
+      binIPFSHashes.push(hash);
+      await sleep(this.uploadDelayMs);
+    }
 
     // construct root file
     const rootFile: IPFSRoot = {
       metadata: this.metadata,
       pivots,
       bins: binIPFSHashes,
-      keys: sortedKeys
+      keys: sortedKeys,
     };
 
     // upload root file
