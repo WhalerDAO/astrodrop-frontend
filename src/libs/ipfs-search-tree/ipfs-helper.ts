@@ -2,9 +2,9 @@ import IPFS from '../ipfs-mini';
 import Pinata from '@pinata/sdk';
 
 export class IPFSHelper {
-  PINATA_KEY_PUBLIC = 'a4f28fad3d730470b5d4';
+  PINATA_KEY_PUBLIC = '2118d54c0ec9b0c87ac5';
   PINATA_KEY_PRIVATE =
-    'ce41cd7a93892a02542a08897a6372500e3784d2ef2d323c743a0a9582709619';
+    '57f1b50a1cfaa88d64cafbde53e2814c450d812895fc08bb8e35fee366f3814e';
 
   pinata: any;
   ipfs: any;

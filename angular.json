@@ -139,7 +139,8 @@
           "options": {
             "baseHref": "https://astrodrop.xyz",
             "repo": "git@github.com:ZeframLou/astrodrop-production.git",
-            "branch": "main"
+            "branch": "main",
+            "cname": "astrodrop.xyz"
           }
         }
       }
