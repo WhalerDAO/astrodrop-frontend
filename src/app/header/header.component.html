@@ -9,7 +9,7 @@
     </a>
     <button (click)="connectWallet()">
       <div *ngIf="wallet.connected">
-        {{wallet.userAddress.substring(0, 14)}}
+        {{accountName}}
       </div>
       <div *ngIf="!wallet.connected">
         Connect Wallet
