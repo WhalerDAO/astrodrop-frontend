@@ -8,12 +8,12 @@ import { isNullOrUndefined } from 'util';
   providedIn: 'root'
 })
 export class WalletService extends Web3Enabled {
-  connectedEvent: EventEmitter<null>;
+  connectedEvent: EventEmitter<string>;
   disconnectedEvent: EventEmitter<null>;
 
   constructor(@Inject(WEB3) public web3: Web3) {
     super(web3);
-    this.connectedEvent = new EventEmitter<null>();
+    this.connectedEvent = new EventEmitter<string>();
     this.disconnectedEvent = new EventEmitter<null>();
   }
 
@@ -27,7 +27,7 @@ export class WalletService extends Web3Enabled {
 
   async connect(onConnected, onError, isStartupMode: boolean) {
     const _onConnected = () => {
-      this.connectedEvent.emit();
+      this.connectedEvent.emit(this.state.address);
       onConnected();
     };
     const _onError = () => {
