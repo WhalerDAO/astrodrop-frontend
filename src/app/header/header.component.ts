@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { WalletService } from '../wallet.service';
 import { ethers } from 'ethers';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-header',
@@ -10,10 +11,20 @@ import { ethers } from 'ethers';
 export class HeaderComponent implements OnInit {
   accountName: string;
 
-  constructor(public wallet: WalletService) { }
+  private _serviceSubscription: Subscription;
+
+  constructor(public wallet: WalletService) {
+    this._serviceSubscription = this.wallet.connectedEvent.subscribe({
+      next: (address: string) => this.setAccountName(address)
+    })
+  }
 
   ngOnInit(): void {
     this.accountName = "unknown";
+  }
+
+  ngOnDestroy(): void {
+    this._serviceSubscription.unsubscribe();
   }
 
   connectWallet() {
