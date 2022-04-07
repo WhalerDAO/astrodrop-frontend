@@ -233,7 +233,7 @@ IPFS.prototype.stat = function cat(ipfsHash, callback) {
  */
 IPFS.prototype.cat = function cat(ipfsHash, callback) {
   var self = this;
-  self.sendAsync({ uri: '/cat/' + ipfsHash }, callback);
+  self.sendAsync({ uri: '/cat?arg=' + ipfsHash, payload: true }, callback);
 };
 
 /**
