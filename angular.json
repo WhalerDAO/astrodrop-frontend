@@ -137,10 +137,9 @@
         "deploy": {
           "builder": "angular-cli-ghpages:deploy",
           "options": {
-            "baseHref": "https://astrodrop.xyz",
             "repo": "git@github.com:ZeframLou/astrodrop-production.git",
             "branch": "main",
-            "cname": "astrodrop.xyz"
+            "cname": "astrodrop.org"
           }
         }
       }
