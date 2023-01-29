@@ -74,6 +74,7 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 "use strict";
 
+// var 
 var XMLHttpRequest = window.XMLHttpRequest; // eslint-disable-line
 
 module.exports = XMLHttpRequest;
@@ -113,6 +114,7 @@ IPFS.prototype.setProvider = function setProvider(provider) {
   if (typeof provider !== 'object') {
     throw new Error('[ifpsjs] provider must be type Object, got \'' + typeof provider + '\'.');
   }
+
   var self = this;
   var data = self.provider = Object.assign({
     host: '127.0.0.1',
@@ -122,6 +124,8 @@ IPFS.prototype.setProvider = function setProvider(provider) {
     base: '/api/v0' }, provider || {});
   self.requestBase = String(data.protocol + '://' + data.host + data.base);
 };
+
+
 
 /**
  * Sends an async data packet to an IPFS node
@@ -233,7 +237,7 @@ IPFS.prototype.stat = function cat(ipfsHash, callback) {
  */
 IPFS.prototype.cat = function cat(ipfsHash, callback) {
   var self = this;
-  self.sendAsync({ uri: '/cat?arg=' + ipfsHash, payload: true }, callback);
+  self.sendAsync({ uri: ipfsHash, payload: false }, callback);
 };
 
 /**

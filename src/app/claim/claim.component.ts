@@ -12,7 +12,7 @@ import { ContractService } from '../contract.service';
   styleUrls: ['./claim.component.css']
 })
 export class ClaimComponent implements OnInit {
-  IPFS_ENDPOINT = 'ipfs.infura.io:5001';
+  IPFS_ENDPOINT = 'gateway.pinata.cloud';
   rootIPFSHash: string;
   remoteTree: RemoteIPFSSearchTree;
   claimAddress: string;

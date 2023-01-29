@@ -14,7 +14,7 @@ export class IPFSHelper {
     this.ipfs = new IPFS({
       host: ipfsEndpoint,
       protocol: 'https',
-      base: '/api/v0',
+      base: '/ipfs/',
     });
   }
 
